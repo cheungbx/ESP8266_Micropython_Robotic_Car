@@ -1,5 +1,5 @@
 # Author: cheungbx  2020/04/30
-# ESP8266 Micropython WIFI remote contorl and Autodrive car
+# ESP8266 Micropython WIFI remote control and Autodrive car
 #
 # Pin layout from each module to the Wemos D1 Mini (ESP8266)
 # ----------------------------------
@@ -38,13 +38,12 @@ from hcsr04 import HCSR04
 html = """<!DOCTYPE html>
 <html>
 <head>
-<title>ESP8266 MicroPython IoT Car </title>
+<title>Car</title>
 <style>
 body {background-color: black}
 h1 {color:red}
-
 button {
-        color: red;
+        color: white;
         height: 200px;
         width: 200px;
         background:black;
@@ -56,20 +55,19 @@ button {
 </style>
 </head>
 <body>
-<center><h1>ESP8266 Micropython Car Control</h1>
+<center>
 <form>
 <div><button name="CMD" value="l" type="submit">L</button>
 <button name="CMD" value="forward" type="submit">Forward</button>
 <button name="CMD" value="r" type="submit">R</button></div>
-<div><button name="CMD" value="left" type="submit">Left</button>
+<div><button name="CMD" value="left" type="submit">Ls</button>
 <button name="CMD" value="stop" type="submit">Stop</button>
-<button name="CMD" value="right" type="submit">Right</button></div>
+<button name="CMD" value="right" type="submit">Rs</button></div>
 <div><button name="CMD" value="back" type="submit">Back</button></div>
 <div><button name="CMD" value="slow" type="submit">Slow</button>
 <button name="CMD" value="mid" type="submit">Mid</button>
-<button name="CMD" value="fast" type="submit">Fast</button></div>
-<div><button name="CMD" value="man" type="submit">MAN</button>
-<button name="CMD" value="auto" type="submit">AUTO</button></div>
+<button name="CMD" value="fast" type="submit">Fast</button>
+<button name="CMD" value="auto" type="submit">Auto</button></div>
 </form>
 </center>
 </body>
@@ -77,59 +75,6 @@ button {
 """
 
 
-
-#skip D4 - built-in LED)
-
-class HCSR04:
-    """
-    Driver to use the untrasonic sensor HC-SR04.
-    The sensor range is between 2cm and 4m.
-    The timeouts received listening to echo pin are converted to OSError('Out of range')
-    """
-    # echo_timeout_us is based in chip range limit (400cm)
-    def __init__(self, trigger_pin, echo_pin, echo_timeout_us=500*2*30):
-        """
-        trigger_pin: Output pin to send pulses
-        echo_pin: Readonly pin to measure the distance. The pin should be protected with 1k resistor
-        echo_timeout_us: Timeout in microseconds to listen to echo pin.
-        By default is based in sensor limit range (4m)
-        """
-        self.echo_timeout_us = echo_timeout_us
-        # Init trigger pin (out)
-        self.trigger = Pin(trigger_pin, mode=Pin.OUT, pull=None)
-        self.trigger.value(0)
-
-        # Init echo pin (in)
-        self.echo = Pin(echo_pin, mode=Pin.IN, pull=None)
-
-    def _send_pulse_and_wait(self):
-        """
-        Send the pulse to trigger and listen on echo pin.
-        We use the method `machine.time_pulse_us()` to get the microseconds until the echo is received.
-        """
-        self.trigger.value(0) # Stabilize the sensor
-        time.sleep_us(5)
-        self.trigger.value(1)
-        # Send a 10us pulse.
-        time.sleep_us(10)
-        self.trigger.value(0)
-        try:
-            pulse_time = machine.time_pulse_us(self.echo, 1, self.echo_timeout_us)
-            return pulse_time
-        except OSError as ex:
-            if ex.args[0] == 110: # 110 = ETIMEDOUT
-                raise OSError('Out of range')
-            raise ex
-
-    def distance_mm(self):
-        pulse_time = self._send_pulse_and_wait()
-        mm = pulse_time * 100 // 582
-        return mm
-
-    def distance_cm(self):
-        pulse_time = self._send_pulse_and_wait()
-        cms = (pulse_time / 2) / 29.1
-        return cms
 
 sensor = HCSR04(trigger_pin=13, echo_pin=15)
 
