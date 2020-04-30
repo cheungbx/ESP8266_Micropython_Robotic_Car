@@ -56,7 +56,7 @@ button {
 </style>
 </head>
 <body>
-<center><h1>Botdemy IoT Car Control</h1>
+<center><h1>ESP8266 Micropython Car Control</h1>
 <form>
 <div><button name="CMD" value="l" type="submit">L</button>
 <button name="CMD" value="forward" type="submit">Forward</button>
