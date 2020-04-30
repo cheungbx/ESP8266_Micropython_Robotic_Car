@@ -5,7 +5,7 @@
 ![car3](https://github.com/cheungbx/esp8266_Micropython_Robotic_Car/blob/master/webpage.jpg) 
 #
 # Author: cheungbx  2020/04/30
-# ESP8266 Micropython WIFI remote contorl and Autodrive car
+# ESP8266 Micropython WIFI remote control and Autodrive car
 #
 # Pin layout from each module to the Wemos D1 Mini (ESP8266)
 # ----------------------------------
