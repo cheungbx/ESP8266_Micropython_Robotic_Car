@@ -34,6 +34,52 @@ from time import sleep, sleep_us, sleep_ms
 import hcsr04
 from hcsr04 import HCSR04
 
+wifissid = 'yourwifissid'
+wifipass = 'yourwifipass'
+
+sensor = HCSR04(trigger_pin=13, echo_pin=15)
+
+servo_right = 30
+servo_centre = 77
+servo_left = 120
+servo_delay = 250 #ms
+servo = machine.PWM(machine.Pin(2), freq=50)
+
+IN1 = PWM(Pin(14))
+IN2 = PWM(Pin(12))
+IN3 = PWM(Pin(5))
+IN4 = PWM(Pin(4))
+
+minSpeed = 300
+midSpeed = 700
+maxSpeed = 1024
+speed = midSpeed
+action = 0
+
+auto=False
+
+def forward_distance () :
+  servo.duty(servo_centre) #centre
+  return sensor.distance_cm()
+
+def right_distance () :
+  servo.duty(servo_right)
+  sleep_ms(servo_delay)
+  return sensor.distance_cm()
+
+def left_distance () :
+  servo.duty(servo_left)
+  sleep_ms(servo_delay)
+  return sensor.distance_cm()
+
+def setMotor(MotorPin, val):
+  MotorPin.freq(50)
+  MotorPin.duty(val)
+
+
+
+
+
 #HTML to send to browsers
 html = """<!DOCTYPE html>
 <html>
@@ -76,104 +122,71 @@ button {
 
 
 
-sensor = HCSR04(trigger_pin=13, echo_pin=15)
 
 
-def setMotor(MotorPin, val):
-  MotorPin.freq(50)
-  MotorPin.duty(val)
 
-Lmotor1 = PWM(Pin(14))
-Lmotor2 = PWM(Pin(12))
-Rmotor1 = PWM(Pin(5))
-Rmotor2 = PWM(Pin(4))
-
-minSpeed = 300
-midSpeed = 700
-maxSpeed = 1024
-speed = midSpeed
-
-servo = machine.PWM(machine.Pin(2), freq=50)
-servo.duty(77) #centre
 
 def stop(t=0):
-  setMotor(Lmotor1, 0)
-  setMotor(Lmotor2, 0)
-  setMotor(Rmotor1, 0)
-  setMotor(Rmotor2, 0)
+  setMotor(IN1, 0)
+  setMotor(IN2, 0)
+  setMotor(IN3, 0)
+  setMotor(IN4, 0)
   if t > 0 :
     sleep_ms(t)
 
 def forward(t=0):
-  setMotor(Lmotor1, 0)
-  setMotor(Lmotor2, speed)
-  setMotor(Rmotor1, 0)
-  setMotor(Rmotor2, speed)
+  setMotor(IN1, speed)
+  setMotor(IN2, 0)
+  setMotor(IN3, speed)
+  setMotor(IN4, 0)
   if t > 0 :
     sleep_ms(t)
 
 
 def back(t=0):
-  setMotor(Lmotor1, speed)
-  setMotor(Lmotor2, 0)
-  setMotor(Rmotor1, speed)
-  setMotor(Rmotor2, 0)
+  setMotor(IN1, 0)
+  setMotor(IN2, speed)
+  setMotor(IN3, 0)
+  setMotor(IN4, speed)
+  if t > 0 :
+    sleep_ms(t)
+
+
+
+def left (t=0):
+  setMotor(IN1, 0)
+  setMotor(IN2, speed)
+  setMotor(IN3, speed)
+  setMotor(IN4, 0)
   if t > 0 :
     sleep_ms(t)
 
 
 def right (t=0):
-  setMotor(Lmotor1, 0)
-  setMotor(Lmotor2, speed)
-  setMotor(Rmotor1, speed)
-  setMotor(Rmotor2, 0)
-  if t > 0 :
-    sleep_ms(t)
-
-
-def left (t=0):
-  setMotor(Lmotor1, speed)
-  setMotor(Lmotor2, 0)
-  setMotor(Rmotor1, 0)
-  setMotor(Rmotor2, speed)
-  if t > 0 :
-    sleep_ms(t)
-
-def right_cruise (t=0):
-  setMotor(Lmotor1, 0)
-  setMotor(Lmotor2, speed)
-  setMotor(Rmotor1, 0)
-  setMotor(Rmotor2, 0)
+  setMotor(IN1, speed)
+  setMotor(IN2, 0)
+  setMotor(IN3, 0)
+  setMotor(IN4, speed)
   if t > 0 :
     sleep_ms(t)
 
 def left_cruise (t=0):
-  setMotor(Lmotor1, 0)
-  setMotor(Lmotor2, 0)
-  setMotor(Rmotor1, 0)
-  setMotor(Rmotor2, speed)
+  setMotor(IN1, 0)
+  setMotor(IN2, 0)
+  setMotor(IN3, speed)
+  setMotor(IN4, 0)
   if t > 0 :
     sleep_ms(t)
 
-def forward_distance () :
-
-  servo.duty(77) #centre
-  return sensor.distance_cm()
-
-def right_distance () :
-
-  servo.duty(40)
-  return sensor.distance_cm()
-
-def left_distance () :
-
-  servo.duty(120)
-  return sensor.distance_cm()
-
+def right_cruise (t=0):
+  setMotor(IN1, speed)
+  setMotor(IN2, 0)
+  setMotor(IN3, 0)
+  setMotor(IN4, 0)
+  if t > 0 :
+    sleep_ms(t)
 
 def autoDrive () :
-
-  servo_rest = 250
   # check distance from obstacles in cm.
   fd = forward_distance()
   print('forward ', fd)
@@ -185,9 +198,7 @@ def autoDrive () :
   elif fd < 25 :
       stop(100)
       ld=left_distance ()
-      sleep_ms (servo_rest)
       rd=right_distance ()
-      sleep_ms (servo_rest)
       print('L ',ld, ' R ', rd)
 
       if ld < 15 and rd < 15 :
@@ -207,106 +218,116 @@ def autoDrive () :
         back(100)
         left(300)
         print ("+Auto right")
-
-
-
   else  : # >= 25
     # forward
     forward (100)
     print ("+Auto forward")
 
+def remoteControl () :
+    global auto, s, action, speed
+    conn, addr = s.accept()
+    print("Got a connection from %s" % str(addr))
+    request = conn.recv(1024)
+    print("Content = %s" % str(request))
+    request = str(request)
 
+    if request.find('/?CMD=forward') == 6:
+        print('+forward')
+        action = 1
+    elif request.find('/?CMD=back') == 6:
+        print('+back')
+        action = 2
+    elif request.find('/?CMD=left') == 6:
+        print('+left')
+        action = 3
+    elif request.find('/?CMD=right') == 6:
+        print('+right')
+        action = 4
+    elif request.find('/?CMD=l') == 6:
+        print('+L')
+        action = 5
+    elif request.find('/?CMD=r') == 6:
+        print('+R')
+        action = 6
+    elif request.find('/?CMD=stop') == 6:
+        print('+stop')
+        action = 0
+    elif request.find('/?CMD=fast') == 6:
+        print('+fast=')
+        speed = maxSpeed
+        print (speed)
+    elif request.find('/?CMD=slow') == 6:
+        print('+slow=')
+        speed = minSpeed
+        print (speed)
+    elif request.find('/?CMD=mid') == 6:
+        print('+mid=')
+        speed = midSpeed
+        print (speed)
+    elif request.find('/?CMD=man') == 6:
+        auto=False
+        action = 0
+        print('+manual=')
+    elif request.find('/?CMD=auto') == 6:
+        auto=True
+        action = 0
+        print('+autoDrive')
 
+    if action == 0:
+        stop ()
+    elif action == 1:
+        forward()
+    elif action == 2:
+        back()
+    elif action == 3:
+        left()
+    elif action == 4:
+        right()
+    elif action == 5:
+        left_cruise()
+    elif action == 6:
+        right_cruise()
+
+    response = html
+    conn.send(response)
+    conn.close()
+
+# main program starts here
+print (forward_distance())
 
 stop()
 
-#Setup Socket WebServer
-#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s = socket.socket()
+import network
 
-#new?
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+# connect the device to the WiFi network
+wifi = network.WLAN(network.STA_IF)
+wifi.active(True)
+wifi.connect(wifissid,wifipass)
+count = 7
+while not wifi.isconnected() and count > 0 :
+    count -= 1
+    print ('.')
+    time.sleep(1)
 
-s.bind(('', 80))
-s.listen(5)
-print("Listening, connect your browser to http://<this_host>:80/")
+if wifi.isconnected() :
+    print('network config:', wifi.ifconfig())
+    #Setup Socket WebServer
+    #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket.socket()
 
-counter = 0
-action = 0
-auto=False
+
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    s.bind(('', 80))
+    s.listen(5)
+    print("Listening, connect your browser to http://<this_host>:80/")
+else  :
+    print('No Wifi. Auto Mode')
+    auto = True
+
+
 while True:
     if auto :
         autoDrive()
-    else :
-        conn, addr = s.accept()
-        print("Got a connection from %s" % str(addr))
-        request = conn.recv(1024)
-        print("Content = %s" % str(request))
-        request = str(request)
-
-        #print("Data: " + str(CMD_forward))
-        #print("Data: " + str(CMD_back))
-        #print("Data: " + str(CMD_left))
-        #print("Data: " + str(CMD_right))
-        #print("Data: " + str(CMD_stop))
-
-        if request.find('/?CMD=forward') == 6:
-            print('+forward')
-            action = 1
-        elif request.find('/?CMD=back') == 6:
-            print('+back')
-            action = 2
-        elif request.find('/?CMD=left') == 6:
-            print('+left')
-            action = 3
-        elif request.find('/?CMD=right') == 6:
-            print('+right')
-            action = 4
-        elif request.find('/?CMD=l') == 6:
-            print('+L')
-            action = 5
-        elif request.find('/?CMD=r') == 6:
-            print('+R')
-            action = 6
-        elif request.find('/?CMD=stop') == 6:
-            print('+stop')
-            action = 0
-        elif request.find('/?CMD=fast') == 6:
-            print('+fast=')
-            speed = maxSpeed
-            print (speed)
-        elif request.find('/?CMD=slow') == 6:
-            print('+slow=')
-            speed = minSpeed
-            print (speed)
-        elif request.find('/?CMD=mid') == 6:
-            print('+mid=')
-            speed = midSpeed
-            print (speed)
-        elif request.find('/?CMD=man') == 6:
-            auto=False
-            action = 0
-            print('+manual=')
-        elif request.find('/?CMD=auto') == 6:
-            auto=True
-            action = 0
-            print('+autoDrive')
-
-        if action == 0:
-            stop ()
-        elif action == 1:
-            forward()
-        elif action == 2:
-            back()
-        elif action == 3:
-            left()
-        elif action == 4:
-            right()
-        elif action == 5:
-            left_cruise()
-        elif action == 6:
-            right_cruise()
-
-        response = html
-        conn.send(response)
-        conn.close()
+    elif wifi.isconnected()  :
+        remoteControl()
