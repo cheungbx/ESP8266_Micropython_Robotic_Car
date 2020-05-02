@@ -210,7 +210,7 @@ def autoDrive () :
       elif ld > rd :
         # left
         back(100)
-        left(300)
+        right(300)
         print ("+Auto left")
 
       else : # ld <= rd
